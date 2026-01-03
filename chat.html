@@ -273,48 +273,9 @@
         </main>
     </div>
 
-    <button id="chat-launcher-button" class="fixed bottom-8 right-8 z-50 btn-glow w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transform transition-all hover:scale-110 hover:rotate-3">
+    <button id="chat-launcher-button" class="fixed bottom-8 right-8 z-50 btn-glow w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transform transition-all hover:scale-110 hover:rotate-3 md:hidden">
         <i data-lucide="message-circle" class="w-8 h-8 text-white"></i>
     </button>
 
-    <script>
-        lucide.createIcons();
-        // Add active state to tabs logic
-        const tabs = document.querySelectorAll('.tab-button');
-        const contents = document.querySelectorAll('.tab-content');
-
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remove active styling from all tabs
-                tabs.forEach(t => {
-                    t.classList.remove('bg-white/10', 'border-b-2', 'border-blue-500');
-                    const icon = t.querySelector('i');
-                    const text = t.querySelector('span');
-                    if(icon) icon.classList.remove('text-white');
-                    if(text) text.classList.remove('text-white');
-                });
-
-                // Add active styling to clicked tab
-                tab.classList.add('bg-white/10');
-                const activeIcon = tab.querySelector('i');
-                const activeText = tab.querySelector('span');
-                if(activeIcon) activeIcon.classList.add('text-white');
-                if(activeText) activeText.classList.add('text-white');
-
-                // Show content
-                const target = tab.dataset.tab;
-                contents.forEach(content => {
-                    if(content.id === `${target}-tab`) {
-                        content.classList.remove('hidden');
-                    } else {
-                        content.classList.add('hidden');
-                    }
-                });
-            });
-        });
-        
-        // Trigger click on first tab to set initial state
-        document.querySelector('[data-tab="chatbot"]').click();
-    </script>
 </body>
 </html>
