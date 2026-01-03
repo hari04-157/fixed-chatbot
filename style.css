@@ -146,3 +146,20 @@ body {
 
 /* Utilities */
 .hidden { display: none !important; }
+
+/* --------------------------------------------------
+   FIX FOR MOBILE OVERLAP
+   This logic hides the launcher button when chat is open
+   --------------------------------------------------
+*/
+#chat-launcher-button {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    z-index: 40; /* Lower than chat window z-50 */
+}
+
+/* When the body has 'chat-open', shrink and hide the launcher button */
+body.chat-open #chat-launcher-button {
+    transform: scale(0) rotate(180deg);
+    opacity: 0;
+    pointer-events: none;
+}
