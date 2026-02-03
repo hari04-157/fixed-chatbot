@@ -401,7 +401,7 @@ app.post('/chat', upload.single('file'), async (req, res) => {
         
         const introTriggers = ['introduce yourself', 'who are you', 'what is your name', "what's your name", 'who made you', 'who developed you', 'who created you'];
         if (introTriggers.some(trigger => userPrompt.toLowerCase().includes(trigger))) {
-            const customResponse = "My name is Jarvis. Developed by Sowmay(roll no:2373A05204), Ashok(2373A05201), P.v Hareesh(roll no:2373A05196), Vineesha(roll no:2373A05199), Anusha(roll no:2373A05191) a third year btech students (2023-2027) batch at PBR VISVODAYA INSTITUTE OF TECHNOLOGY AND SCIENCE ,Kavali.This project is completed under the guidense of Mrs.J.Madhuri madam, Assistant Professor, Department of Computer Science and Engineering. This is a multimodal AI assistant that can process both text and image inputs. It can generate images based on text prompts and provide explanations for uploaded files.";
+            const customResponse = "My name is Jarvis.Developed by maxxgaming";
             responsePayload = { type: 'text', data: customResponse };
         } else if (file) {
             const responseText = await generateTextWithGemini(userPrompt || "Explain this file.", file);
