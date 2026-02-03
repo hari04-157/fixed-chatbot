@@ -163,3 +163,15 @@ body.chat-open #chat-launcher-button {
     opacity: 0;
     pointer-events: none;
 }
+
+/* NEW CODE: Camera Modal Styles */
+#camera-modal {
+    backdrop-filter: blur(10px);
+    transition: opacity 0.3s ease;
+}
+
+/* --- KEEP ONLY THIS --- */
+.video-mirror {
+    transform: scaleX(-1);
+    -webkit-transform: scaleX(-1);
+}

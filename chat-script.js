@@ -26,7 +26,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const removeAttachmentButton = document.getElementById('remove-attachment-button');
 
     let attachedFile = null;
+    // --- IMAGE VIEWER LOGIC (Insert this above "// --- HELPER: SAFE DISABLE ---") ---
+    const imageViewerModal = document.getElementById('image-viewer-modal');
+    const fullImagePreview = document.getElementById('full-image-preview');
+    const closeImageViewerBtn = document.getElementById('close-image-viewer');
 
+    // Make this function global (window.) so onclick in HTML can see it
+    window.openImageViewer = (src) => {
+        if (imageViewerModal && fullImagePreview) {
+            fullImagePreview.src = src;
+            imageViewerModal.classList.remove('hidden');
+            // Small delay for animation
+            setTimeout(() => {
+                imageViewerModal.classList.remove('opacity-0');
+                fullImagePreview.classList.remove('scale-95');
+                fullImagePreview.classList.add('scale-100');
+            }, 10);
+        }
+    };
+
+    const closeImageViewer = () => {
+        if (imageViewerModal) {
+            imageViewerModal.classList.add('opacity-0');
+            if (fullImagePreview) {
+                fullImagePreview.classList.remove('scale-100');
+                fullImagePreview.classList.add('scale-95');
+            }
+            setTimeout(() => imageViewerModal.classList.add('hidden'), 300);
+        }
+    };
+
+    if (closeImageViewerBtn) closeImageViewerBtn.addEventListener('click', closeImageViewer);
+    
+    if (imageViewerModal) {
+        imageViewerModal.addEventListener('click', (e) => {
+            if (e.target === imageViewerModal) closeImageViewer();
+        });
+    }
     // --- HELPER: SAFE DISABLE ---
     const disableChatInputs = () => {
         if (chatInput) chatInput.disabled = true;
@@ -213,7 +249,139 @@ document.addEventListener('DOMContentLoaded', () => {
     if (removeAttachmentButton) {
         removeAttachmentButton.addEventListener('click', clearAttachment);
     }
+    
+    // --- UPDATED CAMERA LOGIC (With Smart Mirroring & Switch) ---
+    const cameraButton = document.getElementById('camera-button');
+    const cameraModal = document.getElementById('camera-modal');
+    const cameraFeed = document.getElementById('camera-feed');
+    const cameraCanvas = document.getElementById('camera-canvas');
+    const captureBtn = document.getElementById('capture-photo');
+    const closeCameraBtn = document.getElementById('close-camera');
+    const switchCameraBtn = document.getElementById('switch-camera');
 
+    let mediaStream = null;
+    let currentFacingMode = 'user'; // Default to front camera
+
+    // Helper: Function to start camera with specific mode
+    const startCameraStream = async (facingMode) => {
+        // Stop any existing stream first
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+        }
+
+        try {
+            // "ideal" constraints allow the browser to pick the best match without crashing if unavailable
+            mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: facingMode,
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 } 
+                } 
+            });
+
+            cameraFeed.srcObject = mediaStream;
+            currentFacingMode = facingMode; // Update state tracking
+
+            // --- SMART MIRROR LOGIC ---
+            // If Selfie ('user') -> Add Mirror Class (Flip Preview)
+            // If Back Camera ('environment') -> Remove Mirror Class (Normal Preview)
+            if (facingMode === 'user') {
+                cameraFeed.classList.add('video-mirror');
+            } else {
+                cameraFeed.classList.remove('video-mirror');
+            }
+        } catch (err) {
+            console.error("Camera error:", err);
+            alert("Could not access camera. Please check permissions.");
+            cameraModal.classList.add('hidden');
+        }
+    };
+
+    // 1. Open Camera (Initial Smart Check)
+    if (cameraButton) {
+        cameraButton.addEventListener('click', () => {
+            cameraModal.classList.remove('hidden');
+            
+            // Check if mobile to decide default camera
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            // Default to back camera ('environment') on mobile, front ('user') on laptop
+            const startMode = isMobile ? 'environment' : 'user';
+            
+            startCameraStream(startMode);
+        });
+    }
+
+    // 2. Switch Camera Button Logic
+    if (switchCameraBtn) {
+        switchCameraBtn.addEventListener('click', () => {
+            // Toggle between 'user' and 'environment'
+            const newMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            startCameraStream(newMode);
+            
+            // Optional: Rotate icon animation
+            const icon = switchCameraBtn.querySelector('i, svg');
+            if(icon) {
+                icon.style.transition = 'transform 0.3s';
+                icon.style.transform = 'rotate(180deg)';
+                setTimeout(() => icon.style.transform = 'rotate(0deg)', 300);
+            }
+        });
+    }
+
+    // 3. Stop Camera Logic
+    const stopCamera = () => {
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            mediaStream = null;
+        }
+        cameraModal.classList.add('hidden');
+    };
+
+    if (closeCameraBtn) closeCameraBtn.addEventListener('click', stopCamera);
+
+    // 4. Capture Logic (With Smart Mirror Save)
+    if (captureBtn) {
+        captureBtn.addEventListener('click', () => {
+            const context = cameraCanvas.getContext('2d');
+            
+            // Match canvas size to the actual video stream resolution
+            cameraCanvas.width = cameraFeed.videoWidth;
+            cameraCanvas.height = cameraFeed.videoHeight;
+            
+            // --- MIRROR SAVE LOGIC ---
+            // If using Front Camera, mirror the canvas BEFORE drawing
+            // This ensures the saved image looks exactly like the preview
+            if (currentFacingMode === 'user') {
+                context.translate(cameraCanvas.width, 0);
+                context.scale(-1, 1);
+            }
+
+            // Draw the current video frame onto the canvas
+            context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
+            
+            // Convert canvas to File and attach to chat
+            cameraCanvas.toBlob((blob) => {
+                const timestamp = new Date().getTime();
+                const file = new File([blob], `capture_${timestamp}.jpg`, { type: 'image/jpeg' });
+                
+                // Assign to global variable for the chat sender to pick up
+                attachedFile = file; 
+                
+                // UI Updates
+                if (attachmentPreview) attachmentPreview.classList.remove('hidden');
+                if (attachmentFilename) attachmentFilename.textContent = file.name;
+                
+                // Visual feedback on the paperclip icon
+                if (fileUploadButton) {
+                    const icon = fileUploadButton.querySelector('i, svg');
+                    if (icon) icon.classList.add('text-blue-400');
+                }
+
+                stopCamera(); 
+            }, 'image/jpeg', 0.95);
+        });
+    }
     // --- MESSAGING LOGIC ---
     const formatMarkdownForHTML = (text) => {
         if (!text) return '';
@@ -292,12 +460,41 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- MAIN SEND FUNCTION ---
+    // --- MAIN SEND FUNCTION ---
     const handleChat = async () => {
         const userInput = chatInput.value.trim();
-        if (!userInput && !attachedFile) return;
+        // Capture the file locally because we clear the global variable later
+        const fileToSend = attachedFile; 
+
+        if (!userInput && !fileToSend) return;
         
         disableChatInputs(); 
         
+        // --- NEW: DISPLAY IMAGE IN CHAT ---
+        // If there is a file, show it in the chat window immediately
+        if (fileToSend) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'flex justify-end mb-2'; // Right align (User)
+                
+                // Create an image bubble
+                // We add 'onclick' so you can click to view full size (like Gemini)
+                messageDiv.innerHTML = `
+                    <div class="chat-message-user p-2 rounded-2xl shadow-lg border border-white/10 relative group hover:scale-[1.02] transition-transform">
+                        <img src="${e.target.result}" 
+                             class="max-w-[200px] max-h-[250px] rounded-xl object-cover cursor-pointer" 
+                             alt="User upload" 
+                             onclick="window.openImageViewer(this.src)">
+                    </div>`;
+                
+                chatWindow.appendChild(messageDiv);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            };
+            reader.readAsDataURL(fileToSend);
+        }
+        // ----------------------------------
+
         if (userInput) {
             addMessage(userInput, 'user');
         }
@@ -313,8 +510,9 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('conversationId', currentConversationId);
         }
         
-        if (attachedFile) {
-            formData.append('file', attachedFile, attachedFile.name);
+        // Use the local 'fileToSend' variable
+        if (fileToSend) {
+            formData.append('file', fileToSend, fileToSend.name);
         }
 
         try {
@@ -357,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addMessage("Sorry, I couldn't connect to the server. Please try again.", 'bot');
         } finally {
             if (chatLoading) chatLoading.classList.add('hidden');
-            clearAttachment();
+            clearAttachment(); // This clears the preview bar, but we've already added it to chat!
             enableChatInputs();
         }
     };

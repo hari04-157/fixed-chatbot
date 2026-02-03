@@ -133,9 +133,12 @@
                         
                         <input type="text" id="chat-input" class="flex-1 p-3 md:p-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:border-blue-500/50 focus:bg-white/10 text-white placeholder-gray-500 transition-all text-sm md:text-base" placeholder="Type a message...">
                         
-                        <div class="flex gap-1">
+                        <div class="flex gap-1">   
                             <button id="emoji-button" class="hidden md:block p-3 text-gray-400 hover:text-yellow-400 hover:bg-white/10 rounded-xl transition-colors">
                                 <i data-lucide="smile" class="w-6 h-6"></i>
+                            </button>
+                            <button id="camera-button" class="p-2 md:p-3 text-gray-400 hover:text-red-400 hover:bg-white/10 rounded-xl transition-colors">
+                                <i data-lucide="camera" class="w-5 h-5 md:w-6 md:h-6"></i>
                             </button>
                             <button id="mic-button" class="p-2 md:p-3 text-gray-400 hover:text-purple-400 hover:bg-white/10 rounded-xl transition-colors">
                                 <i data-lucide="mic" class="w-5 h-5 md:w-6 md:h-6"></i>
@@ -275,6 +278,31 @@
 <button id="chat-launcher-button" class="fixed bottom-8 right-8 z-50 btn-glow w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transform transition-all hover:scale-110 hover:rotate-3">
     <i data-lucide="message-circle" class="w-8 h-8 text-white"></i>
 </button>
+<div id="camera-modal" class="fixed inset-0 z-[60] bg-black/90 hidden flex flex-col items-center justify-center p-4">
+    <div class="relative w-full max-w-lg bg-gray-900 rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+        <video id="camera-feed" autoplay playsinline class="w-full h-auto object-cover bg-black"></video>
+        
+        <canvas id="camera-canvas" class="hidden"></canvas>
 
+        <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+            <button id="close-camera" class="p-3 rounded-full bg-red-600/80 hover:bg-red-500 text-white backdrop-blur-sm">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <button id="capture-photo" class="p-4 rounded-full bg-white text-black hover:bg-gray-200 shadow-lg transform hover:scale-105 transition-all border-4 border-gray-300">
+                <i data-lucide="aperture" class="w-8 h-8"></i>
+            </button>
+            <button id="switch-camera" class="p-3 rounded-full bg-gray-700/80 hover:bg-gray-600 text-white backdrop-blur-sm border border-white/20">
+                <i data-lucide="rotate-cw" class="w-6 h-6"></i>
+            </button> 
+        </div>
+    </div>
+</div>
+<div id="image-viewer-modal" class="fixed inset-0 z-[70] bg-black/95 hidden flex items-center justify-center p-2 opacity-0 transition-opacity duration-300">
+    <button id="close-image-viewer" class="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full z-10 backdrop-blur-md">
+        <i data-lucide="x" class="w-6 h-6"></i>
+    </button>
+    
+    <img id="full-image-preview" src="" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl scale-95 transition-transform duration-300">
+</div>
 </body>
 </html>
